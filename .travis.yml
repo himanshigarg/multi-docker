@@ -1,0 +1,23 @@
+sudo: required
+language: generic
+services:
+  - docker
+
+before_install:
+  - docker build -t himanshi/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true himanshi/react-test npm test
+
+after_success:
+  - docker build -t himanshi/multi-client ./client
+  - docker build -t himanshi/multi-nginx ./nginx
+  - docker build -t himanshi/multi-server ./server
+  - docker build -t himanshi/multi-worker ./worker
+  #Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take those images and push them to docker hub
+  - docker push himanshi/multi-client
+  - docker push himanshi/multi-nginx
+  - docker push himanshi/multi-server
+  - docker push himanshi/multi-worker
